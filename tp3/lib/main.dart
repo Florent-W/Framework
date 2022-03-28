@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:flutter/services.dart';
 import 'job.dart';
 
 
@@ -151,18 +152,22 @@ class SecondScreenState extends State<SecondScreen> {
       appBar: AppBar(
         title: const Text("Nouvelle proposition"),
       ),
+      backgroundColor: Colors.grey,
       body: Center(
-          child: Column(
+          child: Container(width: 500, height: 600, decoration: BoxDecoration(
+              border: Border.all(color: Colors.blueAccent, width: 3), borderRadius: BorderRadius.circular(12.0), color: Colors.white
+          ),
+      child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: <Widget>[
                 const Text('Nouvelle proposition', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 32)),
                 Row(children: <Widget>[
                   IconButton(
-                      icon: const Icon(Icons.calendar_month_outlined),
-                      tooltip: 'Calendrier',
+                      icon: const Icon(Icons.business_outlined),
+                      tooltip: 'Entreprise',
                       onPressed: () {
                       }),
-                  Flexible( // Choix de la date et affichage en temps réel de l'âge de la personne grâce à _pickDate() puis dateUpdate() qui tournera chaque seconde une fois une date choisie
+                  Flexible(
                       child: TextFormField(
                           decoration: const InputDecoration(
                               labelText: 'Entreprise'
@@ -172,8 +177,8 @@ class SecondScreenState extends State<SecondScreen> {
                 ]),
                 Row(children: <Widget>[
                   IconButton(
-                      icon: const Icon(Icons.calendar_month_outlined),
-                      tooltip: 'Calendrier',
+                      icon: const Icon(Icons.euro_rounded),
+                      tooltip: 'Salaire brut annuel',
                       onPressed: () {
                       }),
                   Flexible(
@@ -182,13 +187,17 @@ class SecondScreenState extends State<SecondScreen> {
                               labelText: 'Salaire brut annuel (en euros)'
                           ),
                           controller: salaireNetAnnuelCtl,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: <TextInputFormatter>[
+                          FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+                        ],
                           onChanged: (Text) =>
                             salaireNetMensuelUpdate(),
                           ))
                 ]),  Row(children: <Widget>[
                   IconButton(
-                      icon: const Icon(Icons.calendar_month_outlined),
-                      tooltip: 'Calendrier',
+                      icon: const Icon(Icons.person),
+                      tooltip: 'Statut',
                       onPressed: () {
                       }),
                    Flexible(child: ListTile(
@@ -199,6 +208,7 @@ class SecondScreenState extends State<SecondScreen> {
                     onChanged: (Statut? value) {
                       setState(() {
                         _statut = value;
+                        changeSalaireCadre();
                       });
                     },
                   ),
@@ -219,8 +229,8 @@ class SecondScreenState extends State<SecondScreen> {
                 ]),
                 Row(children: <Widget>[
                   IconButton(
-                      icon: const Icon(Icons.calendar_month_outlined),
-                      tooltip: 'Calendrier',
+                      icon: const Icon(Icons.euro_rounded),
+                      tooltip: 'Salaire net mensuel',
                       onPressed: () {
                       }),
                   Flexible(
@@ -229,14 +239,18 @@ class SecondScreenState extends State<SecondScreen> {
                               labelText: 'Salaire net mensuel (en euros)'
                           ),
                           controller: salaireNetMensuelCtl,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: <TextInputFormatter>[
+                            FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+                          ],
                           onChanged: (Text) =>
                           salaireAnnuelUpdate()
                       ))
                 ]),
                 Row(children: <Widget>[
                   IconButton(
-                      icon: const Icon(Icons.calendar_month_outlined),
-                      tooltip: 'Calendrier',
+                      icon: const Icon(Icons.star_rounded),
+                      tooltip: 'Mon sentiment',
                       onPressed: () {
                       }),
                   Flexible(
@@ -272,6 +286,7 @@ class SecondScreenState extends State<SecondScreen> {
                 ])
               ],
           ),
+          )
       )
       ,
     );
@@ -279,31 +294,51 @@ class SecondScreenState extends State<SecondScreen> {
 
   void salaireNetMensuelUpdate() {
     setState(() {
-      double salaire = double.parse(salaireNetAnnuelCtl.text);
-      salaire = (salaire / 12);
-      double salaireMensuel;
+      if(salaireNetAnnuelCtl.text != '') {
+        double salaire = double.parse(salaireNetAnnuelCtl.text);
+        salaire = (salaire / 12);
+        double salaireMensuel;
 
-      if(_statut.toString() == 'noncadre') {
-         salaireMensuel = salaire * 1.22;
+        if (_statut.toString() == 'noncadre') {
+          salaireMensuel = salaire * 1.22;
+        }
+        else {
+          salaireMensuel = salaire * 1.25;
+        }
+        salaireNetMensuelCtl.text = salaireMensuel.floor().toString();
       }
-      else {
-        salaireMensuel = salaire * 1.25;
-      }
-      salaireNetMensuelCtl.text = salaireMensuel.toString();
     });
   }
 
   void changeSalaireNonCadre() {
-    double salaireMensuel = double.parse(salaireNetMensuelCtl.text);
-    double salaireAnnuel = double.parse(salaireNetAnnuelCtl.text);
-    salaireMensuel = (salaireMensuel /  1.25) * 1.22;
-    salaireAnnuel = (salaireAnnuel / 1.25) * 1.22;
-    salaireNetMensuelCtl.text = salaireMensuel.toString();
-    salaireNetAnnuelCtl.text = salaireAnnuel.toString();
+    setState(() {
+      if(salaireNetMensuelCtl.text != '' && salaireNetAnnuelCtl.text != '') {
+        double salaireMensuel = double.parse(salaireNetMensuelCtl.text);
+        double salaireAnnuel = double.parse(salaireNetAnnuelCtl.text);
+        salaireMensuel = (salaireMensuel / 1.25) * 1.22;
+        salaireAnnuel = (salaireAnnuel / 1.25) * 1.22;
+        salaireNetMensuelCtl.text = salaireMensuel.floor().toString();
+        salaireNetAnnuelCtl.text = salaireAnnuel.floor().toString();
+      }
+    });
+  }
+
+  void changeSalaireCadre() {
+    setState(() {
+      if(salaireNetMensuelCtl.text != '' && salaireNetAnnuelCtl.text != '') {
+        double salaireMensuel = double.parse(salaireNetMensuelCtl.text);
+        double salaireAnnuel = double.parse(salaireNetAnnuelCtl.text);
+        salaireMensuel = (salaireMensuel / 1.22) * 1.25;
+        salaireAnnuel = (salaireAnnuel / 1.22) * 1.25;
+        salaireNetMensuelCtl.text = salaireMensuel.floor().toString();
+        salaireNetAnnuelCtl.text = salaireAnnuel.floor().toString();
+      }
+    });
   }
 
   void salaireAnnuelUpdate() {
     setState(() {
+      if(salaireNetMensuelCtl.text != ''){
       double salaire = double.parse(salaireNetMensuelCtl.text);
       salaire = (salaire * 12);
       double salaireAnnuel = (salaire * 12);
@@ -314,7 +349,7 @@ class SecondScreenState extends State<SecondScreen> {
       else {
         salaireAnnuel = salaire / 1.25;
       }
-      salaireNetAnnuelCtl.text = salaireAnnuel.toString();
-    });
-  }
+      salaireNetAnnuelCtl.text = salaireAnnuel.floor().toString();
+    }});
+    }
 }
