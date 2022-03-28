@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:build_runner/build_runner.dart';
-part 'job.dart';
+import 'job.dart';
+
 
 void main() async {
 
   // Initialize hive
   await Hive.initFlutter();
- // Hive.registerAdapter("Job");
+  Hive.registerAdapter(JobAdapter());
 
   var box = await Hive.openBox('jobBox');
 
@@ -142,6 +142,8 @@ class SecondScreen extends StatefulWidget {
 
 class SecondScreenState extends State<SecondScreen> {
   Statut? _statut = Statut.cadre;
+  TextEditingController salaireNetMensuelCtl = TextEditingController();
+  TextEditingController salaireNetAnnuelCtl = TextEditingController();
 
   @override
   Widget build (BuildContext ctxt) {
@@ -179,8 +181,10 @@ class SecondScreenState extends State<SecondScreen> {
                           decoration: const InputDecoration(
                               labelText: 'Salaire brut annuel (en euros)'
                           ),
-                          onTap: () {
-                          }))
+                          controller: salaireNetAnnuelCtl,
+                          onChanged: (Text) =>
+                            salaireNetMensuelUpdate(),
+                          ))
                 ]),  Row(children: <Widget>[
                   IconButton(
                       icon: const Icon(Icons.calendar_month_outlined),
@@ -207,6 +211,7 @@ class SecondScreenState extends State<SecondScreen> {
                       onChanged: (Statut? value) {
                         setState(() {
                           _statut = value;
+                          changeSalaireNonCadre();
                         });
                       },
                     ),
@@ -223,8 +228,10 @@ class SecondScreenState extends State<SecondScreen> {
                           decoration: const InputDecoration(
                               labelText: 'Salaire net mensuel (en euros)'
                           ),
-                          onTap: () {
-                          }))
+                          controller: salaireNetMensuelCtl,
+                          onChanged: (Text) =>
+                          salaireAnnuelUpdate()
+                      ))
                 ]),
                 Row(children: <Widget>[
                   IconButton(
@@ -268,5 +275,46 @@ class SecondScreenState extends State<SecondScreen> {
       )
       ,
     );
+  }
+
+  void salaireNetMensuelUpdate() {
+    setState(() {
+      double salaire = double.parse(salaireNetAnnuelCtl.text);
+      salaire = (salaire / 12);
+      double salaireMensuel;
+
+      if(_statut.toString() == 'noncadre') {
+         salaireMensuel = salaire * 1.22;
+      }
+      else {
+        salaireMensuel = salaire * 1.25;
+      }
+      salaireNetMensuelCtl.text = salaireMensuel.toString();
+    });
+  }
+
+  void changeSalaireNonCadre() {
+    double salaireMensuel = double.parse(salaireNetMensuelCtl.text);
+    double salaireAnnuel = double.parse(salaireNetAnnuelCtl.text);
+    salaireMensuel = (salaireMensuel /  1.25) * 1.22;
+    salaireAnnuel = (salaireAnnuel / 1.25) * 1.22;
+    salaireNetMensuelCtl.text = salaireMensuel.toString();
+    salaireNetAnnuelCtl.text = salaireAnnuel.toString();
+  }
+
+  void salaireAnnuelUpdate() {
+    setState(() {
+      double salaire = double.parse(salaireNetMensuelCtl.text);
+      salaire = (salaire * 12);
+      double salaireAnnuel = (salaire * 12);
+
+      if(_statut == 'noncadre') {
+        salaireAnnuel = salaire / 1.22;
+      }
+      else {
+        salaireAnnuel = salaire / 1.25;
+      }
+      salaireNetAnnuelCtl.text = salaireAnnuel.toString();
+    });
   }
 }

@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:hive/hive.dart';
+part 'job.g.dart';
 
 @HiveType(typeId: 1)
 class Job {
