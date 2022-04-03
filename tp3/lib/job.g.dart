@@ -17,11 +17,11 @@ class JobAdapter extends TypeAdapter<Job> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return Job(
-      entreprise: fields[0] as dynamic,
-      salaireBrutAnnuel: fields[1] as dynamic,
-      choixStatut: fields[2] as dynamic,
-      salaireNetMensuel: fields[3] as dynamic,
-      sentiment: fields[4] as dynamic,
+      fields[0] as String,
+      fields[1] as double,
+      fields[2] as String,
+      fields[3] as double,
+      fields[4] as String,
     );
   }
 
