@@ -54,6 +54,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Statut? _statut = Statut.cadre;
   int? _nombreMoisPrime = 12;
   double _currentSliderValue = 1;
+  double _sliderSourceValue = 1;
 
   // Les controlleurs permettant de définir les textes et de les changer
   TextEditingController salaireNetHoraireCtl = TextEditingController();
@@ -64,6 +65,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   TextEditingController salaireNetAnnuelCtl = TextEditingController();
   TextEditingController salaireBrutAnnuelCtl = TextEditingController();
+
+  TextEditingController salaireNetMensuelApresImpotsCtl = TextEditingController();
+  TextEditingController salaireNetAnnuelApresImpotsCtl = TextEditingController();
 
   // On créé une clé pour le formulaire, à l'aide de celle-ci, les champs pourront être vérifiés
   final _formKey = GlobalKey<FormState>();
@@ -109,8 +113,9 @@ class _MyHomePageState extends State<MyHomePage> {
         Row(children: [Flexible(child:
         TextFormField(
           decoration: InputDecoration(
+            prefixIcon: Icon(Icons.euro_outlined),
             labelText: 'Horaire brut',
-            hintText: 'IUT Orsay',
+            hintText: 'Ex : 19.23',
             border: OutlineInputBorder(
               borderSide: const BorderSide(
                   color: Colors.blue, width: 2.0),
@@ -132,8 +137,9 @@ class _MyHomePageState extends State<MyHomePage> {
           Flexible(child:
           TextFormField(
               decoration: InputDecoration(
+                prefixIcon: Icon(Icons.euro_outlined),
                 labelText: 'Horaire net',
-                hintText: 'IUT Orsay',
+                hintText: 'Ex : 15',
                 border: OutlineInputBorder(
                   borderSide: const BorderSide(
                       color: Colors.blue, width: 2.0),
@@ -152,23 +158,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 }
               }
           )),
-          Slider(
-            value: _currentSliderValue,
-            max: 100,
-            divisions: 5,
-            label: _currentSliderValue.round().toString(),
-            onChanged: (double value) {
-              setState(() {
-                _currentSliderValue = value;
-              });
-            },
-          )
         ]),
         Row(children: <Widget> [Flexible(child:
         TextFormField(
             decoration: InputDecoration(
+              prefixIcon: Icon(Icons.euro_outlined),
               labelText: 'Mensuel brut',
-              hintText: 'IUT Orsay',
+              hintText: 'Ex : 2916.73',
               border: OutlineInputBorder(
                 borderSide: const BorderSide(
                     color: Colors.blue, width: 2.0),
@@ -179,7 +175,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 borderRadius: BorderRadius.circular(25.0),
               ),
             ),
-            validator: (value) {
+          onChanged: (Text) => salaireHoraireNetEnBrutUpdate(salaireBrutMensuelCtl, 'salaireBrutMensuel'),
+          validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Ce champ est vide, veuillez le compléter';
               }
@@ -188,8 +185,9 @@ class _MyHomePageState extends State<MyHomePage> {
         )), Flexible(child:
         TextFormField(
             decoration: InputDecoration(
+              prefixIcon: Icon(Icons.euro_outlined),
               labelText: 'Mensuel net',
-              hintText: 'IUT Orsay',
+              hintText: 'Ex : 2275.05',
               border: OutlineInputBorder(
                 borderSide: const BorderSide(
                     color: Colors.blue, width: 2.0),
@@ -201,7 +199,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
             controller: salaireNetMensuelCtl,
-            onChanged: (Text) => salaireAnnuelUpdate(),
+            onChanged: (Text) => salaireHoraireNetEnBrutUpdate(salaireNetMensuelCtl, 'salaireNetMensuel'),
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Ce champ est vide, veuillez le compléter';
@@ -215,8 +213,9 @@ class _MyHomePageState extends State<MyHomePage> {
             Row(children: <Widget>[Flexible(child:
             TextFormField(
                 decoration: InputDecoration(
+                  prefixIcon: Icon(Icons.euro_outlined),
                   labelText: 'Annuel brut',
-                  hintText: 'IUT Orsay',
+                  hintText: '35000.77',
                   border: OutlineInputBorder(
                     borderSide: const BorderSide(
                         color: Colors.blue, width: 2.0),
@@ -228,7 +227,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
                 controller: salaireBrutAnnuelCtl,
-            onChanged: (Text) => salaireNetMensuelUpdate(),
+                onChanged: (Text) => salaireHoraireNetEnBrutUpdate(salaireBrutAnnuelCtl, 'salaireBrutAnnuel'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Ce champ est vide, veuillez le compléter';
@@ -237,8 +236,9 @@ class _MyHomePageState extends State<MyHomePage> {
             )), Flexible(child:
             TextFormField(
                 decoration: InputDecoration(
+                  prefixIcon: Icon(Icons.euro_outlined),
                   labelText: 'Annuel net',
-                  hintText: 'IUT Orsay',
+                  hintText: 'Ex : 27300.60',
                   border: OutlineInputBorder(
                     borderSide: const BorderSide(
                         color: Colors.blue, width: 2.0),
@@ -250,7 +250,8 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
                 controller: salaireNetAnnuelCtl,
-                validator: (value) {
+              onChanged: (Text) => salaireHoraireNetEnBrutUpdate(salaireNetAnnuelCtl, 'salaireNetAnnuel'),
+              validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Ce champ est vide, veuillez le compléter';
                   }
@@ -266,7 +267,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         // Mise à jour du salaire
                         setState(() {
                           _nombreMoisPrime = value;
-                          // changeSalaireStatut();
+                          salaireHoraireNetEnBrutUpdate(salaireNetHoraireCtl, 'mois');
                         });
                       },
                     )
@@ -281,7 +282,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           // Mise à jour du salaire
                           setState(() {
                             _nombreMoisPrime = value;
-                            // changeSalaireStatut();
+                            salaireHoraireNetEnBrutUpdate(salaireNetHoraireCtl, 'mois');
                           });
                         },
                       )
@@ -296,7 +297,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           // Mise à jour du salaire
                           setState(() {
                             _nombreMoisPrime = value;
-                            // changeSalaireStatut();
+                            salaireHoraireNetEnBrutUpdate(salaireNetHoraireCtl, 'mois');
                           });
                         },
                       )
@@ -311,7 +312,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           // Mise à jour du salaire
                           setState(() {
                             _nombreMoisPrime = value;
-                            // changeSalaireStatut();
+                            salaireHoraireNetEnBrutUpdate(salaireNetHoraireCtl, 'mois');
                           });
                         },
                       )
@@ -326,32 +327,44 @@ class _MyHomePageState extends State<MyHomePage> {
                           // Mise à jour du statut et du salaire
                           setState(() {
                             _nombreMoisPrime = value;
-                            // changeSalaireStatut();
+                            salaireHoraireNetEnBrutUpdate(salaireNetHoraireCtl, 'mois');
                           });
                         },
                       )
                   ))
             ]),
-            Row(children: const [
-              Text('SELECTIONNEZ VOTRE STATUT :'),
-              Text('ESTIMATION DE VOTRE SALAIRE NET APRES LE PRELEVEMENT A LA SOURCE')
-            ],),
+            Row(children: [
+              const Text('SELECTIONNEZ VOTRE STATUT :'),
+              const Text('ESTIMATION DE VOTRE SALAIRE NET APRES LE PRELEVEMENT A LA SOURCE'),
+              Slider(
+                value: _currentSliderValue,
+                max: 100,
+                divisions: 5,
+                label: _currentSliderValue.round().toString(),
+                onChanged: (double value) {
+                  setState(() {
+                    _currentSliderValue = value;
+                    salaireHoraireNetEnBrutUpdate(salaireNetHoraireCtl, 'slider');
+                  });
+                },
+              ),
+
+              Slider(
+                value: _sliderSourceValue,
+                min: 0,
+                max: 43,
+                divisions: 5,
+                label: _sliderSourceValue.round().toString(),
+                onChanged: (double value) {
+                  setState(() {
+                    _sliderSourceValue = value;
+                    salaireHoraireNetEnBrutUpdate(salaireNetHoraireCtl, 'slider');
+                  });
+                },
+              )
+            ],
+            ),
             Row(children: <Widget> [
-               Flexible(
-                  child: ListTile(
-                    title: const Text('Cadre'),
-                      leading: Radio<Statut>(
-                        value: Statut.cadre,
-                        groupValue: _statut,
-                        onChanged: (Statut? value) {
-                          // Mise à jour du statut et du salaire
-                          setState(() {
-                            _statut = value;
-                           // changeSalaireStatut();
-                          });
-                        },
-                      )
-                  )),
     Flexible(
     child: ListTile(
     title: const Text('Non cadre'),
@@ -362,11 +375,27 @@ class _MyHomePageState extends State<MyHomePage> {
     // Mise à jour du statut et du salaire
     setState(() {
     _statut = value;
-    // changeSalaireStatut();
+    salaireHoraireNetEnBrutUpdate(salaireNetHoraireCtl, 'statut');
     });
     },
     )
     )),
+              Flexible(
+                  child: ListTile(
+                      title: const Text('Cadre'),
+                      leading: Radio<Statut>(
+                        value: Statut.cadre,
+                        groupValue: _statut,
+                        onChanged: (Statut? value) {
+                          // Mise à jour du statut et du salaire
+                          setState(() {
+                            _statut = value;
+                            salaireHoraireNetEnBrutUpdate(salaireNetHoraireCtl, 'statut');
+                          });
+                        },
+                      )
+                  ))
+                ,
               Flexible(
                   child: ListTile(
                       title: const Text('Fonction publique'),
@@ -377,7 +406,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           // Mise à jour du statut et du salaire
                           setState(() {
                             _statut = value;
-                            // changeSalaireStatut();
+                            salaireHoraireNetEnBrutUpdate(salaireNetHoraireCtl, 'statut');
                           });
                         },
                       )
@@ -392,7 +421,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           // Mise à jour du statut et du salaire
                           setState(() {
                             _statut = value;
-                            // changeSalaireStatut();
+                            salaireHoraireNetEnBrutUpdate(salaireNetHoraireCtl, 'statut');
                           });
                         },
                       )
@@ -406,7 +435,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           // Mise à jour du statut et du salaire
                           setState(() {
                             _statut = value;
-                            // changeSalaireStatut();
+                            salaireHoraireNetEnBrutUpdate(salaireNetHoraireCtl, 'statut');
                           });
                         },
                       )
@@ -414,8 +443,9 @@ class _MyHomePageState extends State<MyHomePage> {
               Flexible(child:
               TextFormField(
                   decoration: InputDecoration(
+                    prefixIcon: Icon(Icons.euro_outlined),
                     labelText: 'Mensuel net après impôts',
-                    hintText: 'IUT Orsay',
+                    hintText: 'Ex : 2275.05',
                     border: OutlineInputBorder(
                       borderSide: const BorderSide(
                           color: Colors.blue, width: 2.0),
@@ -426,7 +456,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       borderRadius: BorderRadius.circular(25.0),
                     ),
                   ),
-                  controller: salaireNetMensuelCtl,
+                  controller: salaireNetMensuelApresImpotsCtl,
+                  onChanged: (Text) => salaireHoraireNetEnBrutUpdate(salaireNetMensuelApresImpotsCtl, 'salaireNetMensuelApresImpots'),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Ce champ est vide, veuillez le compléter';
@@ -436,8 +467,9 @@ class _MyHomePageState extends State<MyHomePage> {
               Flexible(child:
               TextFormField(
                   decoration: InputDecoration(
+                    prefixIcon: Icon(Icons.euro_outlined),
                     labelText: 'Annuel net après impôts',
-                    hintText: 'IUT Orsay',
+                    hintText: 'Ex : 27300.60',
                     border: OutlineInputBorder(
                       borderSide: const BorderSide(
                           color: Colors.blue, width: 2.0),
@@ -448,13 +480,18 @@ class _MyHomePageState extends State<MyHomePage> {
                       borderRadius: BorderRadius.circular(25.0),
                     ),
                   ),
+                  controller: salaireNetAnnuelApresImpotsCtl,
+                  onChanged: (Text) => salaireHoraireNetEnBrutUpdate(salaireNetAnnuelApresImpotsCtl, 'salaireNetAnnuelApresImpots'),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Ce champ est vide, veuillez le compléter';
                     }
                   }
               )),
-            ],),            Row(children: <Widget> [TextButton(onPressed: () { _formKey.currentState?.reset();},
+            ],),            Row(children: <Widget> [TextButton(onPressed:
+                () { // _formKey.currentState?.reset();
+              resetFormulaire();
+              },
                 child: const Text('EFFACER LES CHAMPS'))])
           ],
         ),
@@ -513,21 +550,147 @@ class _MyHomePageState extends State<MyHomePage> {
       // On regarde tout d'abord si le salaire mensuel n'est pas vide
       if (champModifier.text != '') {
         double salaire = double.parse(champModifier.text);
+        double salaireNet = -1;
         double salaireNetMensuel = 0;
         double salaireNetAnnuel = 0;
+        double salaireNetMensuelApresImpots = 0;
+        double salaireNetAnnuelApresImpots = 0;
 
+        double salaireBrut = -1;
         double salaireBrutMensuel = 0;
         double salaireBrutAnnuel = 0;
 
-        if (typeChamp == 'salaireNetHoraire') {
-          salaireNetMensuel = salaire * 151.67;
-          salaireNetMensuelCtl.text = salaireNetMensuel.toStringAsFixed(2);
-        } else if(typeChamp == 'salaireBrutHoraire') {
-          salaireBrutMensuel = salaire * 151.67;
-          salaireBrutMensuelCtl.text = salaireBrutMensuel.toStringAsFixed(2);
+        if (typeChamp == 'salaireNetHoraire' || typeChamp == 'salaireNetMensuel' || typeChamp == 'salaireNetAnnuel' || typeChamp == 'salaireNetMensuelApresImpots' || typeChamp == 'salaireNetAnnuelApresImpots') {
+          if(typeChamp == 'salaireNetHoraire') {
+            salaireNet = salaire;
+          }
+          else if(typeChamp == 'salaireNetMensuel') {
+            salaireNet = salaire / 151.67;
+            salaireNetHoraireCtl.text = salaireNet.toStringAsFixed(2);
+          }
+          else if(typeChamp == 'salaireNetAnnuel') {
+            salaireNet = (salaire / 12) / 151.67;
+            salaireNetHoraireCtl.text = salaireNet.toStringAsFixed(2);
+          }
+          else if(typeChamp == 'salaireNetMensuelApresImpots') {
+            double pourcentage = (100 - _sliderSourceValue) / 100;
+            salaireNet = (salaire / pourcentage) / 151.67;
+            salaireNetHoraireCtl.text = salaireNet.toStringAsFixed(2);
+          }
+          else if(typeChamp == 'salaireNetAnnuelApresImpots') {
+            double pourcentage = (100 - _sliderSourceValue) / 100;
+            salaireNet = ((salaire / pourcentage) / 12) / 151.67;
+            salaireNetHoraireCtl.text = salaireNet.toStringAsFixed(2);
+          }
+
+          // La différence entre le brut et le net se fait selon le statut, avec cela, on retrouve le salaire mensuel brut
+          switch(_statut) {
+            case Statut.noncadre:
+              salaireBrut = (salaireNet / (78 / 100));
+              break;
+            case Statut.cadre:
+              salaireBrut = (salaireNet / (75 / 100));
+              break;
+            case Statut.publique:
+              salaireBrut = (salaireNet / (85 / 100));
+              break;
+            case Statut.liberale:
+              salaireBrut = (salaireNet / (55 / 100));
+              break;
+            default:
+              salaireBrut = (salaireNet / (49 / 100));
+          }
+
+          salaireBrutHoraireCtl.text = salaireBrut.toStringAsFixed(2);
+        }
+        else if(typeChamp == 'salaireBrutHoraire' || typeChamp == 'salaireBrutMensuel' || typeChamp == 'salaireBrutAnnuel' || typeChamp == 'statut') {
+          if(typeChamp == 'salaireBrutHoraire') {
+            salaireBrut = salaire;
+          }
+          else if(typeChamp == "statut") {
+            salaireBrut = double.parse(salaireBrutHoraireCtl.text);
+          }
+          else if(typeChamp == 'salaireBrutMensuel') {
+            salaireBrut = salaire / 151.67;
+            salaireBrutHoraireCtl.text = salaireBrut.toStringAsFixed(2);
+          }
+          else if(typeChamp == 'salaireBrutAnnuel') {
+            salaireBrut = (salaire / 12) / 151.67;
+            salaireBrutHoraireCtl.text = salaireBrut.toStringAsFixed(2);
+          }
+
+          switch(_statut) {
+            case Statut.noncadre:
+              salaireNet = (salaireBrut * (78 / 100));
+              break;
+            case Statut.cadre:
+              salaireNet = (salaireBrut * (75 / 100));
+              break;
+            case Statut.publique:
+              salaireNet = (salaireBrut * (85 / 100));
+              break;
+            case Statut.liberale:
+              salaireNet = (salaireBrut * (55 / 100));
+              break;
+            default:
+              salaireNet = (salaireBrut * (49 / 100));
+          }
+
+          salaireNetHoraireCtl.text = salaireNet.toStringAsFixed(2);
         }
 
-        if(typeChamp == 'salaireNetHoraire' || typeChamp == 'salaireNetMensuel') {
+          if(salaireNet == -1 && salaireNetHoraireCtl.text != '') {
+            salaireNet = double.parse(salaireNetHoraireCtl.text);
+          }
+          if(salaireBrut == -1 && salaireBrutHoraireCtl.text != '') {
+            salaireBrut = double.parse(salaireBrutHoraireCtl.text);
+          }
+
+          salaireNetMensuel = salaireNet * 151.67;
+          salaireBrutMensuel = salaireBrut * 151.67;
+
+          if(_currentSliderValue != null) {
+            salaireNetMensuel = salaireNetMensuel * (_currentSliderValue / 100);
+            salaireBrutMensuel = salaireBrutMensuel * (_currentSliderValue / 100);
+          }
+
+          if(typeChamp != 'salaireNetMensuel') {
+            salaireNetMensuelCtl.text = salaireNetMensuel.toStringAsFixed(2);
+          }
+          if(typeChamp != 'salaireBrutMensuel') {
+            salaireBrutMensuelCtl.text = salaireBrutMensuel.toStringAsFixed(2);
+          }
+
+          if(_sliderSourceValue != null) {
+            salaireNetMensuelApresImpots = salaireNetMensuel - (salaireNetMensuel * (_sliderSourceValue / 100));
+          } else {
+            salaireNetMensuelApresImpots = salaireNetMensuel;
+          }
+
+          if(typeChamp != 'salaireNetMensuelApresImpots') {
+            salaireNetMensuelApresImpotsCtl.text = salaireNetMensuelApresImpots.toStringAsFixed(2);
+          }
+
+          if (_nombreMoisPrime != null) {
+            salaireBrutAnnuel = salaireBrutMensuel * _nombreMoisPrime!;
+            salaireNetAnnuel = salaireNetMensuel * _nombreMoisPrime!;
+            salaireNetAnnuelApresImpots = salaireNetMensuelApresImpots * _nombreMoisPrime!;
+          } else {
+            salaireBrutAnnuel = salaireBrutMensuel * 12;
+            salaireNetAnnuel = salaireNetMensuel * 12;
+            salaireNetAnnuelApresImpots = salaireNetMensuelApresImpots * 12;
+          }
+          if(typeChamp != 'salaireBrutAnnuel') {
+            salaireBrutAnnuelCtl.text = salaireBrutAnnuel.toStringAsFixed(2);
+          }
+          if(typeChamp != 'salaireNetAnnuel') {
+            salaireNetAnnuelCtl.text = salaireNetAnnuel.toStringAsFixed(2);
+          }
+          if(typeChamp != 'salaireNetAnnuelApresImpots') {
+            salaireNetAnnuelApresImpotsCtl.text = salaireNetAnnuelApresImpots.toStringAsFixed(2);
+          }
+
+        if(typeChamp == 'salaireNetHoraire' || typeChamp == 'salaireNetMensuel' || typeChamp == 'statut12mois') {
           if (_nombreMoisPrime != null) {
             salaireNetAnnuel = salaireNetMensuel * _nombreMoisPrime!;
           }
@@ -544,39 +707,21 @@ class _MyHomePageState extends State<MyHomePage> {
           else {
             salaireBrutAnnuel = salaireBrutMensuel * 12;
           }
-          salaireBrutAnnuelCtl.text = salaireBrutAnnuel.toStringAsFixed(2);
-        }
-
-
-        // La différence entre le brut et le net se fait selon le statut, avec cela, on retrouve le salaire mensuel brut
-          if (_statut == Statut.noncadre) {
-            salaire = (salaire / (78 / 100));
-          } else if (_statut == Statut.cadre) {
-            salaire = (salaire / (75 / 100));
-          } else if (_statut == Statut.publique) {
-            salaire = (salaire / (85 / 100));
-          } else if (_statut == Statut.liberale) {
-            salaire = (salaire / (55 / 100));
-          } else {
-            salaire = (salaire / (49 / 100));
-          }
-
-          // Affichage du nombre sous forme décimale
-        if(typeChamp == 'salaireNetHoraire') {
-          salaireBrutHoraireCtl.text = salaire.toStringAsFixed(2);
-
-          salaireBrutMensuel = salaire * 151.67;
-          salaireBrutMensuelCtl.text = salaireBrutMensuel.toStringAsFixed(2);
-
-          if (_nombreMoisPrime != null) {
-            salaireBrutAnnuel = salaireBrutMensuel * _nombreMoisPrime!;
-          } else {
-            salaireBrutAnnuel = salaireBrutMensuel * 12;
-          }
-          salaireBrutAnnuelCtl.text = salaireBrutAnnuel.toStringAsFixed(2);
         }
         }
-    });
+        }
+    );
+  }
+
+  void resetFormulaire() {
+    salaireNetHoraireCtl.clear();
+    salaireBrutHoraireCtl.clear();
+    salaireNetMensuelCtl.clear();
+    salaireBrutMensuelCtl.clear();
+    salaireNetMensuelApresImpotsCtl.clear();
+    salaireNetAnnuelCtl.clear();
+    salaireBrutAnnuelCtl.clear();
+    salaireNetAnnuelApresImpotsCtl.clear();
   }
 
 
