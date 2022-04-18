@@ -1,3 +1,3 @@
-# tp4
+# TP4
 
 Un calculateur de salaire
